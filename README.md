@@ -32,7 +32,7 @@ Potom som vytvoril nový súbor v projekte TestPpt23 s názvom HospitalTest.cs. 
 ## Spustenie Hospital Testov
 Na spustenie testov som klikol na TestPpt23 v solution explorer a potom na Run tests. Tým sa otvorilo okno Test Explorer a spustili testy. Testy boli úspešné.
 
-<img src="1.png" width="350">
+<img src="1.png" width="550">
 
 ## Záver
 
