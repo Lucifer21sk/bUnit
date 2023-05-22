@@ -1,0 +1,109 @@
+﻿@using Microsoft.AspNetCore.Components.Forms;
+@using Ppt23.Shared;
+
+
+@if (Equi == null) return;
+@{
+    if (equipment == null && IsInEditMode)
+        EnableEditMode();
+}
+
+@if (!IsInEditMode)
+    {
+    <div class="grid grid-cols-[1fr_1fr_1fr_1fr_1fr_auto] gap-4 p-2 px-1 py-1 @((Equi.IsRevisionNeeded) ? "bg-red-200" : "")">
+        <div class="p-2">
+            <NavLink href="@($"hospital-equipment/{Equi.Id}")">@Equi.Name</NavLink>
+        </div>
+        <div class="p-2 text-center">@Equi.BoughtDate.ToString("yyyy-MM-dd")</div>
+        <div class="p-2 text-center">@((Equi.LastRevisionDate != null) ? Equi.LastRevisionDate.Value.ToString("yyyy-MM-dd") : "N/A")</div>
+        <div class="p-2 text-center">@Equi.PriceFormatted</div>
+        <div class="p-2 text-center">@((Equi.IsRevisionNeeded) ? "Yes" : "No")</div>
+        <div class="flex justify-center">
+            <button class="border rounded bg-teal-500 text-white text-sm px-2" @onclick="() => OnDelete.InvokeAsync()">Delete</button>
+            <button class="border rounded bg-teal-700 text-white text-sm px-2 ml-2" @onclick="PerformRevisionClicked">Perform Revision</button>
+            <button class="border rounded bg-emerald-300 text-white text-sm px-2 ml-2" @onclick="() => EnableEditMode()">Edit</button>
+        </div>
+    </div>
+}
+else if (equipment != null)
+{
+    <div class="grid grid-cols-[1fr_1fr_1fr_1fr_1fr_auto] gap-4 p-2 px-1 py-1">
+        <EditForm class="col-span-6" Model=equipment OnValidSubmit="() => OnValidSubmit()">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <div class="grid grid-cols-6 gap-4 p-2 px-1 py-1">
+                <div class="p-2">
+                    <InputText class="border-2 border-slate-300" id="name" @bind-Value=@equipment.Name />
+                </div>
+                <div class="p-2 text-center">
+                    <InputDate class="border-2 border-slate-300" id="boughtDate" @bind-Value=@equipment.BoughtDate />
+                </div>
+                <div class="p-2 text-center">
+                    <InputDate class="border-2 border-slate-300" id="lastRevisionDate" @bind-Value=@equipment.LastRevisionDate />
+                </div>
+                <div class="p-2 text-center">
+                    <InputNumber class="border-2 border-slate-300" id="price" @bind-Value=@equipment.Price min="0" max="10000000" />
+                </div>
+                <div class="p-2 text-center">@((equipment.IsRevisionNeeded) ? "Yes" : "No")</div>
+                <div class="flex justify-center">
+                @if (ChildContent == null)
+                {
+                    <button type="submit" class="border rounded bg-teal-500 text-white text-sm px-2">Ok</button>
+                    <button class="border rounded bg-teal-700 text-white text-sm px-2 ml-2" @onclick="() => IsInEditMode = false">Cancel</button>
+                }
+                else
+                {
+                    @ChildContent
+                }
+                </div>
+            </div>
+        </EditForm>
+    </div>
+}
+
+
+@code {
+    [Parameter, EditorRequired] public EquipmentVm Equi { get; set; } = null!;
+    EquipmentVm? equipment;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public bool IsInEditMode { get; set; }
+    [Parameter] public EventCallback<EquipmentVm> OnDelete { get; set; }
+    [Parameter] public EventCallback<EquipmentVm> EditDoneEventCallback { get; set; }
+    [Parameter] public EventCallback OnRevision { get; set; }
+
+
+
+    private async Task OnValidSubmit()
+    {
+        ArgumentNullException.ThrowIfNull(equipment);
+        IsInEditMode = false;
+        Equi.Name = equipment.Name;
+        Equi.BoughtDate = equipment.BoughtDate;
+        Equi.LastRevisionDate = equipment.LastRevisionDate;
+        Equi.Price = equipment.Price;
+        await EditDoneEventCallback.InvokeAsync(Equi);
+    }
+
+    void EnableEditMode()
+    {
+        IsInEditMode = true;
+        equipment = new ()
+		{
+			Name = Equi.Name,
+			BoughtDate = Equi.BoughtDate,
+			LastRevisionDate = Equi.LastRevisionDate,
+			Price = Equi.Price
+		};
+    }
+   
+    private async Task PerformRevision()
+    {
+        await OnRevision.InvokeAsync();
+    }
+    private async Task PerformRevisionClicked()
+    {
+        await PerformRevision();
+    }
+
+
+}
